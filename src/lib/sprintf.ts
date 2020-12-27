@@ -13,5 +13,5 @@
 export function sprintf(string: string, ...args: string[]): string {
   let i = 0
 
-  return string.replace(/%s/g, () => args[i++])
+  return string.replace(/%s/g, () => args[i++] ?? '')
 }

@@ -1,23 +1,25 @@
-import invariant from 'tiny-invariant'
-
-import { COULD_NOT_FIND_RELEASE_REF } from '../constants'
+import { COULD_NOT_FIND_RELEASE_REF_MSG } from '../constants'
 import { PrismicRef } from '../types'
-import { getRefs, GetRefsOptions } from './getRefs'
+import {
+  getRepositoryInfo,
+  GetRepositoryInfoOptions,
+} from './getRepositoryInfo'
+import { invariant } from './invariant'
 
-export type GetMasterRefOptions = GetRefsOptions
+export type GetMasterRefOptions = GetRepositoryInfoOptions
 
 export async function getReleaseRef(
   repositoryName: string,
   releaseID: string,
   options: GetMasterRefOptions,
 ): Promise<PrismicRef> {
-  const refs = await getRefs(repositoryName, {
+  const repositoryInfo = await getRepositoryInfo(repositoryName, {
     accessToken: options.accessToken,
     apiEndpoint: options.apiEndpoint,
   })
 
-  const releaseRef = refs.find((ref) => ref.id === releaseID)
-  invariant(releaseRef, COULD_NOT_FIND_RELEASE_REF)
+  const releaseRef = repositoryInfo.refs.find((ref) => ref.id === releaseID)
+  invariant(releaseRef, COULD_NOT_FIND_RELEASE_REF_MSG, repositoryName)
 
   return releaseRef
 }

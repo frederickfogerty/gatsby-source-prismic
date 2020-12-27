@@ -6,9 +6,9 @@ export type BuildPrismicURLOptions = {
   ref: string | undefined
   accessToken: PluginOptions['accessToken']
   apiEndpoint: PluginOptions['apiEndpoint']
-  graphQuery?: PluginOptions['graphQuery']
-  fetchLinks?: PluginOptions['fetchLinks']
-  lang?: PluginOptions['lang']
+  graphQuery: PluginOptions['graphQuery']
+  fetchLinks: PluginOptions['fetchLinks']
+  lang: PluginOptions['lang'] | undefined
 }
 
 export function buildPrismicURL(
@@ -21,7 +21,7 @@ export function buildPrismicURL(
   const url = new URL(apiEndpoint)
 
   if (options.accessToken) {
-    url.searchParams.set('accessToken', options.accessToken)
+    url.searchParams.set('access_token', options.accessToken)
   }
 
   if (options.ref) {

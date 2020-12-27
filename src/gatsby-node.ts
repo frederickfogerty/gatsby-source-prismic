@@ -4,19 +4,26 @@ import {
   DEFAULT_LANG,
   DEFAULT_IMGIX_PARAMS,
   DEFAULT_PLACEHOLDER_IMGIX_PARAMS,
-  COULD_NOT_FIND_RELEASE_REF_WITH_FALLBACK,
-  FETCHING_WITH_RELEASE_REF,
+  COULD_NOT_FIND_RELEASE_REF_WITH_FALLBACK_MSG,
+  FETCHING_WITH_RELEASE_REF_MSG,
   GLOBAL_TYPE_PREFIX,
+  MISSING_SCHEMAS_MSG,
+  TYPE_PATHS_KEY_TEMPLATE,
 } from './constants'
+import { PluginOptions } from './types'
+import { createNodeHelpers } from './lib/nodeHelpers'
 import { fetchAllDocuments } from './lib/fetchAllDocuments'
 import { getMasterRef } from './lib/getMasterRef'
 import { getReleaseRef } from './lib/getReleaseRef'
-import { createNodeHelpers } from './lib/nodeHelpers'
+import { getRepositoryInfo } from './lib/getRepositoryInfo'
 import { reportInfo } from './lib/reportInfo'
 import { reportWarning } from './lib/reportWarning'
+import { reporterMessage } from './lib/reporterMessage'
 import { sprintf } from './lib/sprintf'
+import { pascalCase } from './lib/pascalCase'
+
 import { onWebhook } from './on-webhook'
-import { PluginOptions } from './types'
+import { customizeSchema } from './customize-schema'
 
 export const pluginOptionsSchema: NonNullable<
   gatsby.GatsbyNode['pluginOptionsSchema']
@@ -33,6 +40,7 @@ export const pluginOptionsSchema: NonNullable<
     lang: Joi.string().default(DEFAULT_LANG),
     linkResolver: Joi.function(),
     htmlSerializer: Joi.function(),
+    schemas: Joi.object(),
     imageImgixParams: Joi.object().default(DEFAULT_IMGIX_PARAMS),
     imagePlaceholderImgixParams: Joi.object().default(
       DEFAULT_PLACEHOLDER_IMGIX_PARAMS,
@@ -40,7 +48,36 @@ export const pluginOptionsSchema: NonNullable<
     shouldDownloadImage: Joi.function(),
     typePrefix: Joi.string(),
     webhookSecret: Joi.string(),
-  }).oxor('fetchLinks', 'graphQuery')
+  })
+    .oxor('fetchLinks', 'graphQuery')
+    .external(async (pluginOptions: PluginOptions) => {
+      const repositoryInfo = await getRepositoryInfo(
+        pluginOptions.repositoryName,
+        {
+          accessToken: pluginOptions.accessToken,
+          apiEndpoint: pluginOptions.apiEndpoint,
+        },
+      )
+
+      const schemaTypes = Object.keys(pluginOptions.schemas)
+      const repositoryTypes = Object.keys(repositoryInfo.types)
+
+      let missingSchemas = [] as string[]
+      for (const repositoryType of repositoryTypes) {
+        if (!schemaTypes.includes(repositoryType)) {
+          missingSchemas = [...missingSchemas, repositoryType]
+        }
+      }
+
+      if (missingSchemas.length > 0) {
+        throw new Error(
+          reporterMessage(
+            sprintf(MISSING_SCHEMAS_MSG, missingSchemas.join(', ')),
+            pluginOptions.repositoryName,
+          ),
+        )
+      }
+    })
 
   return schema
 }
@@ -51,7 +88,17 @@ export const createSchemaCustomization: NonNullable<
   args: gatsby.CreateSchemaCustomizationArgs,
   pluginOptions: PluginOptions,
 ): Promise<void> => {
-  return
+  const res = customizeSchema(args, pluginOptions)
+
+  args.actions.createTypes(res.graphqlTypes)
+
+  const typePathsKey = sprintf(
+    TYPE_PATHS_KEY_TEMPLATE,
+    pluginOptions.repositoryName,
+    args.createContentDigest(pluginOptions.schemas),
+  )
+
+  args.cache.set(typePathsKey, res.typePaths)
 }
 
 export const sourceNodes: NonNullable<
@@ -81,7 +128,7 @@ export const sourceNodes: NonNullable<
 
       if (ref) {
         reportInfo(
-          sprintf(FETCHING_WITH_RELEASE_REF, ref.label, ref.ref),
+          sprintf(FETCHING_WITH_RELEASE_REF_MSG, ref.label, ref.ref),
           pluginOptions.repositoryName,
           args.reporter.info,
         )
@@ -89,7 +136,7 @@ export const sourceNodes: NonNullable<
     } catch {
       reportWarning(
         sprintf(
-          COULD_NOT_FIND_RELEASE_REF_WITH_FALLBACK,
+          COULD_NOT_FIND_RELEASE_REF_WITH_FALLBACK_MSG,
           pluginOptions.releaseID,
         ),
         pluginOptions.repositoryName,
@@ -106,7 +153,7 @@ export const sourceNodes: NonNullable<
   }
 
   const nodeHelpers = createNodeHelpers({
-    typePrefix: pluginOptions.typePrefix ?? GLOBAL_TYPE_PREFIX,
+    typePrefix: pascalCase(GLOBAL_TYPE_PREFIX, pluginOptions.typePrefix),
     fieldPrefix: GLOBAL_TYPE_PREFIX,
     createNodeId: args.createNodeId,
     createContentDigest: args.createContentDigest,

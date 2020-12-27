@@ -34,7 +34,8 @@ async function aggregateFetchAllDocuments(
   })
 
   const url = new URL(baseURL)
-  url.searchParams.set('q', '')
+  url.pathname = `${url.pathname}/documents/search`
+  url.searchParams.set('q', '[]')
   url.searchParams.set('page', page.toString())
   url.searchParams.set('pageSize', QUERY_PAGE_SIZE.toString())
 

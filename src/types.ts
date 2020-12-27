@@ -2,7 +2,10 @@ import * as gatsby from 'gatsby'
 import * as gatsbyImgix from 'gatsby-plugin-imgix'
 import * as PrismicDOM from 'prismic-dom'
 
-type UnknownRecord<K extends PropertyKey = PropertyKey> = Record<K, unknown>
+export type UnknownRecord<K extends PropertyKey = PropertyKey> = Record<
+  K,
+  unknown
+>
 
 export interface PluginOptions extends gatsby.PluginOptions {
   repositoryName: string
@@ -14,6 +17,7 @@ export interface PluginOptions extends gatsby.PluginOptions {
   lang: string
   linkResolver?: (doc: PrismicDocument) => string
   htmlSerializer?: typeof PrismicDOM.HTMLSerializer
+  schemas: Record<string, PrismicSchema>
   imageImgixParams: gatsbyImgix.ImgixUrlParams
   imagePlaceholderImgixParams: gatsbyImgix.ImgixUrlParams
   shouldDownloadImage?: (args: ShouldDownloadImageArgs) => boolean
@@ -28,7 +32,19 @@ type ShouldDownloadImageArgs = {
   value: string
 }
 
-export type PrismicRef = {
+export interface PrismicRepositoryInfo {
+  refs: PrismicRef[]
+  types: Record<string, string>
+  languages: PrismicLanguage[]
+  tags: string[]
+}
+
+interface PrismicLanguage {
+  id: string
+  name: string
+}
+
+export interface PrismicRef {
   id: string
   ref: string
   label: string
@@ -57,6 +73,69 @@ interface PrismicAlternateLanguage {
   uid?: string
   type: string
   lang: string
+}
+
+export interface PrismicSchema {
+  [tabName: string]: PrismicTabSchema
+}
+
+interface PrismicTabSchema {
+  [fieldName: string]: PrismicFieldSchema
+}
+
+export type PrismicFieldSchema =
+  | PrismicStandardFieldSchema
+  | PrismicGroupFieldSchema
+  | PrismicSlicesFieldSchema
+
+export enum PrismicFieldType {
+  Boolean = 'Boolean',
+  Color = 'Color',
+  Date = 'Date',
+  Embed = 'Embed',
+  GeoPoint = 'GeoPoint',
+  Image = 'Image',
+  Link = 'Link',
+  Number = 'Number',
+  Select = 'Select',
+  StructuredText = 'StructuredText',
+  Text = 'Text',
+  Timestamp = 'Timestamp',
+  UID = 'UID',
+  Group = 'Group',
+  Slice = 'Slice',
+  Slices = 'Slices',
+}
+
+interface PrismicStandardFieldSchema {
+  type: Exclude<PrismicFieldType, 'Group' | 'Slice' | 'Slices'>
+  config: {
+    label?: string
+    placeholder?: string
+  }
+}
+
+interface PrismicGroupFieldSchema {
+  type: PrismicFieldType.Group
+  config: {
+    label?: string
+    placeholder?: string
+    fields: Record<string, PrismicStandardFieldSchema>
+  }
+}
+
+interface PrismicSliceSchema {
+  type: PrismicFieldType.Slice
+  'non-repeat': Record<string, PrismicStandardFieldSchema>
+  repeat: Record<string, PrismicStandardFieldSchema>
+}
+
+interface PrismicSlicesFieldSchema {
+  type: PrismicFieldType.Slices
+  config: {
+    labels?: Record<string, string[]>
+    choices: Record<string, PrismicSliceSchema>
+  }
 }
 
 export type PrismicWebhookBody =

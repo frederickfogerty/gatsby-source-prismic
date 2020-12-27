@@ -1,3 +1,4 @@
+/dist/
 node_modules/
 shell.nix
 *.log
