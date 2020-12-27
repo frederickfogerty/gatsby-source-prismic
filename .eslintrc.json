@@ -9,6 +9,7 @@
   "rules": {
     "curly": "error",
     "prefer-const": "error",
-    "newline-before-return": "error"
+    "newline-before-return": "error",
+    "sort-imports": ["error", { "allowSeparatedGroups": true }]
   }
 }

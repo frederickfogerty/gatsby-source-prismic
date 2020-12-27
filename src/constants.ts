@@ -37,7 +37,7 @@ export const PRISMIC_URL_REGEX = /^https?:\/\/([^.]+)\.(wroom\.(?:test|io)|prism
 // node.
 export const PREVIEWABLE_NODE_ID_FIELD = '_previewable'
 
-export const TYPE_PATHS_KEY_TEMPLATE = 'gatsby-source-prismic %s %s'
+export const TYPE_PATHS_KEY_TEMPLATE = 'gatsby-source-prismic typePaths %s-%s'
 
 export const WEBHOOK_SECRET_MISMATCH_MSG =
   'A webhook was received, but the webhook secret did not match the webhook secret provided in the plugin options. If this is unexpected, verify that the `webhookSecret` plugin option matches the webhook secret in your Prismic repository.'

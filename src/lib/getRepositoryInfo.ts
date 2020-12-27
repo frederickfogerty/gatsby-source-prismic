@@ -1,8 +1,8 @@
 import fetch from 'cross-fetch'
 
+import { BuildPrismicURLOptions, buildPrismicURL } from './buildPrismicURL'
 import { COULD_NOT_FETCH_REPOSITORY_INFO_MSG } from '../constants'
 import { PrismicRepositoryInfo } from '../types'
-import { buildPrismicURL, BuildPrismicURLOptions } from './buildPrismicURL'
 import { invariant } from './invariant'
 import { sprintf } from './sprintf'
 

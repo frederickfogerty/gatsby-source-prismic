@@ -1,6 +1,6 @@
+import * as PrismicDOM from 'prismic-dom'
 import * as gatsby from 'gatsby'
 import * as gatsbyImgix from 'gatsby-plugin-imgix'
-import * as PrismicDOM from 'prismic-dom'
 
 export type UnknownRecord<K extends PropertyKey = PropertyKey> = Record<
   K,
@@ -68,6 +68,13 @@ export interface PrismicDocument<
   data: TData
 }
 
+export interface PrismicDocumentNode<
+  TData extends UnknownRecord<string> = UnknownRecord<string>
+> extends PrismicDocument<TData>,
+    gatsby.Node {
+  prismicId: string
+}
+
 interface PrismicAlternateLanguage {
   id: string
   uid?: string
@@ -124,18 +131,47 @@ interface PrismicGroupFieldSchema {
   }
 }
 
-interface PrismicSliceSchema {
+export interface PrismicSliceSchema {
   type: PrismicFieldType.Slice
   'non-repeat': Record<string, PrismicStandardFieldSchema>
   repeat: Record<string, PrismicStandardFieldSchema>
 }
 
-interface PrismicSlicesFieldSchema {
+export interface PrismicSlicesFieldSchema {
   type: PrismicFieldType.Slices
   config: {
     labels?: Record<string, string[]>
     choices: Record<string, PrismicSliceSchema>
   }
+}
+
+interface PrismicStructuredTextFieldItem {
+  type: string
+  text: string
+  spans: { [key: string]: unknown }
+}
+
+export type PrismicStructuredTextField = PrismicStructuredTextFieldItem[]
+
+export interface PrismicLinkField {
+  link_type: 'Any' | 'Document' | 'Media' | 'Web'
+  isBroken: boolean
+  url?: string
+  target?: string
+  size?: number
+  id?: string
+  type?: string
+  tags?: string[]
+  lang?: string
+  slug?: string
+  uid?: string
+}
+
+export interface PrismicSliceField {
+  slice_type: string
+  slice_label: string
+  items: UnknownRecord[]
+  primary: UnknownRecord
 }
 
 export type PrismicWebhookBody =
