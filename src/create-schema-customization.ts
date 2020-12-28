@@ -20,10 +20,12 @@ import {
   PrismicSliceSchema,
   PrismicSlicesFieldSchema,
   PrismicStructuredTextField,
+  TypePath,
 } from './types'
 import { identity } from './lib/identity'
 import { listTypeName } from './lib/listTypeName'
 import { pascalCase } from './lib/pascalCase'
+import { serializePath } from './lib/serializePath'
 import { sprintf } from './lib/sprintf'
 
 type SchemaCustomizationArgs = {
@@ -34,12 +36,6 @@ type SchemaCustomizationArgs = {
   pluginOptions: PluginOptions
   nodeHelpers: NodeHelpers
   globalNodeHelpers: NodeHelpers
-}
-
-interface TypePath {
-  path: string[]
-  type: string
-  fieldType?: PrismicFieldType
 }
 
 export const createSchemaCustomization: NonNullable<
@@ -572,7 +568,11 @@ function buildTypePath(
   type: string,
   fieldType?: PrismicFieldType,
 ): TypePath {
-  return { path, type, fieldType }
+  return {
+    path: serializePath(path),
+    type,
+    fieldType,
+  }
 }
 
 function buildBaseTypes(

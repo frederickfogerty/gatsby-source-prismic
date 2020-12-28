@@ -32,6 +32,12 @@ type ShouldDownloadImageArgs = {
   value: string
 }
 
+export interface TypePath {
+  path: string
+  type: string
+  fieldType?: PrismicFieldType
+}
+
 export interface PrismicRepositoryInfo {
   refs: PrismicRef[]
   types: Record<string, string>
